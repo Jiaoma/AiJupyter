@@ -1,0 +1,22 @@
+{
+  "name": "aijupyter",
+  "version": "1.0.0",
+  "description": "AiJupyter - Obsidian plugin for idea tracking with Claude Code integration",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production"
+  },
+  "keywords": ["obsidian", "plugin", "ai", "idea-tracker"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "esbuild": "^0.20.0",
+    "obsidian": "^1.5.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "simple-git": "^3.22.0"
+  }
+}

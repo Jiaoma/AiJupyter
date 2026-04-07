@@ -1,0 +1,250 @@
+/* AiJupyter - Status Colors */
+
+.aijupyter-status-all-pass {
+  background-color: #d4edda;
+  border-left: 4px solid #28a745;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.aijupyter-status-has-fail {
+  background-color: #f8d7da;
+  border-left: 4px solid #dc3545;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.aijupyter-status-in-progress {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.aijupyter-status-no-tests {
+  opacity: 0.8;
+}
+
+/* Breadcrumb Navigation */
+
+.aijupyter-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  background-color: var(--background-secondary);
+  border-radius: 6px;
+  font-size: 0.85em;
+  flex-wrap: wrap;
+}
+
+.aijupyter-breadcrumb-item {
+  color: var(--text-accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.aijupyter-breadcrumb-item:hover {
+  text-decoration: underline;
+}
+
+.aijupyter-breadcrumb-separator {
+  color: var(--text-muted);
+  margin: 0 2px;
+}
+
+.aijupyter-breadcrumb-current {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+/* Dashboard View */
+
+.aijupyter-dashboard {
+  padding: 16px;
+}
+
+.aijupyter-dashboard h2 {
+  margin-bottom: 16px;
+}
+
+.aijupyter-dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.aijupyter-dashboard-card {
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  background-color: var(--background-secondary);
+}
+
+.aijupyter-dashboard-card-number {
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.aijupyter-dashboard-card-label {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.aijupyter-dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.aijupyter-dashboard-table th,
+.aijupyter-dashboard-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.aijupyter-dashboard-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  text-transform: uppercase;
+}
+
+.aijupyter-dashboard-table tr:hover {
+  background-color: var(--background-secondary);
+}
+
+.aijupyter-dashboard-link {
+  color: var(--text-accent);
+  cursor: pointer;
+}
+
+.aijupyter-dashboard-link:hover {
+  text-decoration: underline;
+}
+
+/* Status Badge */
+
+.aijupyter-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.aijupyter-badge-pass {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.aijupyter-badge-fail {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.aijupyter-badge-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* Side Panel */
+
+.aijupyter-side-panel {
+  padding: 12px;
+}
+
+.aijupyter-side-panel h3 {
+  margin: 0 0 8px 0;
+  font-size: 1em;
+}
+
+.aijupyter-side-panel-section {
+  margin-bottom: 16px;
+}
+
+.aijupyter-side-panel-tree {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.aijupyter-side-panel-tree li {
+  padding: 4px 0;
+}
+
+.aijupyter-side-panel-tree ul {
+  list-style: none;
+  padding-left: 16px;
+  margin: 0;
+}
+
+.aijupyter-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.aijupyter-tree-item:hover {
+  color: var(--text-accent);
+}
+
+.aijupyter-tree-icon {
+  font-size: 0.85em;
+  width: 16px;
+  text-align: center;
+}
+
+/* Progress Bar */
+
+.aijupyter-progress {
+  width: 100%;
+  height: 6px;
+  background-color: var(--background-modifier-border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.aijupyter-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.aijupyter-progress-fill-pass {
+  background-color: #28a745;
+}
+
+.aijupyter-progress-fill-fail {
+  background-color: #dc3545;
+}
+
+/* Loading indicator */
+
+.aijupyter-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--text-muted);
+}
+
+.aijupyter-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--background-modifier-border);
+  border-top-color: var(--text-accent);
+  border-radius: 50%;
+  animation: aijupyter-spin 0.6s linear infinite;
+}
+
+@keyframes aijupyter-spin {
+  to { transform: rotate(360deg); }
+}

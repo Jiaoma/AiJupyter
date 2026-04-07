@@ -1,0 +1,9 @@
+{
+  "id": "aijupyter",
+  "name": "AiJupyter",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "将人类的顶层想法描述转化为可遍历的文档树，集成 Claude Code 自动生成详细设计、追踪代码 diff、管理测试用例",
+  "author": "AiJupyter",
+  "isDesktopOnly": true
+}
