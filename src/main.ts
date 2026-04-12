@@ -23,6 +23,10 @@ export default class AiJupyterPlugin extends Plugin {
 	private breadcrumbProcessor!: BreadcrumbProcessor;
 	private statusColorProcessor!: StatusColorProcessor;
 
+	// Debounce state for auto-link-on-save
+	private autoLinkTimer: ReturnType<typeof setTimeout> | null = null;
+	private autoLinkRunning = false;
+
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
@@ -183,14 +187,30 @@ export default class AiJupyterPlugin extends Plugin {
 		// Settings tab
 		this.addSettingTab(new AiJupyterSettingTab(this.app, this));
 
-		// Auto-link on save
+		// Auto-link on save (debounced — waits 2s after last modify, skips if already running)
 		this.registerEvent(
-			this.app.vault.on('modify', async (file) => {
+			this.app.vault.on('modify', (file) => {
 				if (!this.settings.autoLinkOnSave) return;
 				if (!(file instanceof TFile)) return;
 				if (!file.path.startsWith(this.settings.ideasFolder + '/')) return;
-				// Debounce: use a simple flag
-				await this.linkService.linkKeywords(file);
+
+				// Debounce: restart timer on each modify, only fire after 2s idle
+				if (this.autoLinkTimer) {
+					clearTimeout(this.autoLinkTimer);
+				}
+				this.autoLinkTimer = setTimeout(async () => {
+					this.autoLinkTimer = null;
+					if (this.autoLinkRunning) return; // Skip if a previous run is still in progress
+					this.autoLinkRunning = true;
+					try {
+						await this.linkService.linkKeywords(file);
+						this.statusService.clearCache();
+					} catch (e) {
+						new Notice(`自动链接失败: ${(e as Error).message}`);
+					} finally {
+						this.autoLinkRunning = false;
+					}
+				}, 2000);
 			})
 		);
 

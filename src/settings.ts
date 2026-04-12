@@ -71,6 +71,19 @@ export class AiJupyterSettingTab extends PluginSettingTab {
 					})
 			);
 
+		new Setting(containerEl)
+			.setName('日志目录')
+			.setDesc('存放操作日志文档的目录')
+			.addText((text) =>
+				text
+					.setPlaceholder('logs')
+					.setValue(this.plugin.settings.logsFolder)
+					.onChange(async (value) => {
+						this.plugin.settings.logsFolder = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
 		// ── Shell settings ──
 		containerEl.createEl('h3', { text: 'Shell 配置' });
 

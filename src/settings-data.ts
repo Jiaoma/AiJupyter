@@ -5,6 +5,7 @@ export interface AiJupyterSettings {
 	detailsFolder: string;
 	diffsFolder: string;
 	testsFolder: string;
+	logsFolder: string;
 	shell: ShellType;
 	extraPath: string;
 	claudeMode: 'cli' | 'api';
@@ -24,6 +25,7 @@ export const DEFAULT_SETTINGS: AiJupyterSettings = {
 	detailsFolder: 'details',
 	diffsFolder: 'diffs',
 	testsFolder: 'tests',
+	logsFolder: 'logs',
 	shell: '/bin/zsh',
 	extraPath: '',
 	claudeMode: 'cli',

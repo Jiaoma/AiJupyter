@@ -248,3 +248,72 @@
 @keyframes aijupyter-spin {
   to { transform: rotate(360deg); }
 }
+
+/* Generation Progress Indicator */
+
+.aijupyter-gen-progress {
+  min-width: 240px;
+}
+
+.aijupyter-gen-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.aijupyter-gen-progress-title {
+  font-weight: 600;
+}
+
+.aijupyter-gen-progress-timer {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.aijupyter-gen-progress-status {
+  font-size: 0.9em;
+  color: var(--text-normal);
+  margin-bottom: 6px;
+  min-height: 1.2em;
+}
+
+.aijupyter-gen-progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--background-modifier-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.aijupyter-gen-progress-bar-fill {
+  height: 100%;
+  background-color: var(--text-accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.aijupyter-gen-progress-bar-fill-indeterminate {
+  background: linear-gradient(
+    90deg,
+    var(--background-modifier-border) 0%,
+    var(--text-accent) 50%,
+    var(--background-modifier-border) 100%
+  );
+  background-size: 200% 100%;
+  animation: aijupyter-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes aijupyter-indeterminate {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.aijupyter-gen-progress-step {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-top: 4px;
+}

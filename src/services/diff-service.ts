@@ -2,6 +2,7 @@ import { App, TFile, TFolder, Notice } from 'obsidian';
 import type { AiJupyterSettings } from '../settings-data';
 import { getLatestCommitHash, getCommitDiff, getRepoRoot } from '../utils/git';
 import { renderDiffTemplate } from '../utils/template';
+import { OperationLogger } from '../utils/logger';
 
 export class DiffService {
 	private app: App;
@@ -47,11 +48,16 @@ export class DiffService {
 			return;
 		}
 
+		const logger = new OperationLogger(this.app, this.settings.logsFolder, '记录 Git Diff');
 		try {
 			const commitHash = await getLatestCommitHash(repoRoot, this.settings.shell, this.settings.extraPath);
-			await this.recordCommitDiff(repoRoot, commitHash);
+			logger.info(`获取最新 commit：${commitHash.slice(0, 7)}`);
+			await this.recordCommitDiff(repoRoot, commitHash, logger);
+			await logger.flush();
 			new Notice('已记录最新 commit 的 diff');
 		} catch (e) {
+			logger.error(`记录 diff 失败：${(e as Error).message}`);
+			await logger.flush();
 			new Notice(`记录 diff 失败: ${(e as Error).message}`);
 		}
 	}
@@ -64,32 +70,42 @@ export class DiffService {
 			const currentCommit = await getLatestCommitHash(repoRoot, this.settings.shell, this.settings.extraPath);
 			if (currentCommit !== this.lastKnownCommit) {
 				this.lastKnownCommit = currentCommit;
-				await this.recordCommitDiff(repoRoot, currentCommit);
+				const logger = new OperationLogger(this.app, this.settings.logsFolder, '自动记录 Git Diff');
+				logger.info(`检测到新 commit：${currentCommit.slice(0, 7)}`);
+				await this.recordCommitDiff(repoRoot, currentCommit, logger);
+				await logger.flush();
 			}
 		} catch {
 			// Silently ignore polling errors
 		}
 	}
 
-	private async recordCommitDiff(repoRoot: string, commitHash: string): Promise<void> {
+	private async recordCommitDiff(repoRoot: string, commitHash: string, logger?: OperationLogger): Promise<void> {
 		const result = await getCommitDiff(repoRoot, commitHash, this.settings.shell, this.settings.extraPath);
+		logger?.info(`commit 信息：${result.message.split('\n')[0]}`);
+		logger?.info(`变更文件数：${result.files.length}`);
+		for (const f of result.files) {
+			logger?.info(`  ${f.changeType}  ${f.path}`);
+		}
 
 		// Try to match to a detail document based on commit message or changed files
 		const detailSlug = this.matchToDetail(result.message, result.files.map((f) => f.path));
 		if (!detailSlug) {
-			// Create a generic diff record
-			await this.createDiffDoc('unlinked', 'unlinked', commitHash, result);
+			logger?.warn('未匹配到详细设计文档，记录为 unlinked');
+			await this.createDiffDoc('unlinked', 'unlinked', commitHash, result, logger);
 			return;
 		}
 
-		await this.createDiffDoc(detailSlug.subfolder, detailSlug.slug, commitHash, result);
+		logger?.success(`匹配到详细设计文档：${detailSlug.subfolder}/${detailSlug.slug}`);
+		await this.createDiffDoc(detailSlug.subfolder, detailSlug.slug, commitHash, result, logger);
 	}
 
 	private async createDiffDoc(
 		subfolder: string,
 		detailFileName: string,
 		commitHash: string,
-		result: { commit: string; message: string; files: { path: string; changeType: string }[]; diff: string }
+		result: { commit: string; message: string; files: { path: string; changeType: string }[]; diff: string },
+		logger?: OperationLogger
 	): Promise<void> {
 		// Find next available diff number
 		const diffFolder = `${this.settings.diffsFolder}/${subfolder}`;
@@ -115,9 +131,11 @@ export class DiffService {
 
 		await this.ensureFolder(diffFolder);
 		await this.app.vault.create(diffPath, content);
+		logger?.success(`创建 diff 文档：${diffPath}`);
 
 		// Update the related detail document's diff table
 		await this.updateDetailDiffTable(subfolder, detailFileName, index, commitHash, result.message);
+		logger?.info(`已更新详细设计文档的 diff 表格`);
 	}
 
 	private async updateDetailDiffTable(

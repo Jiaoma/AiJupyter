@@ -3,6 +3,7 @@ import type { AiJupyterSettings } from '../settings-data';
 import type { TestStatus } from '../models/test-case';
 import { today } from '../utils/frontmatter';
 import { shellExec } from '../utils/shell-env';
+import { OperationLogger } from '../utils/logger';
 
 export class TestService {
 	private app: App;
@@ -25,19 +26,30 @@ export class TestService {
 		}
 
 		new Notice('正在执行测试...');
+		const logger = new OperationLogger(this.app, this.settings.logsFolder, '执行测试用例');
+		logger.info(`执行测试命令：${this.settings.testCommand}`);
+		logger.info(`工作目录：${basePath}`);
 
 		try {
 			const output = await this.executeTestCommand(basePath);
-			await this.parseAndUpdateResults(output);
+			logger.info('测试命令执行完成');
+			const updatedCount = await this.parseAndUpdateResults(output, logger);
+			logger.success(`共更新 ${updatedCount} 个用例状态`);
+			await logger.flush();
 			new Notice('测试执行完成，已更新用例状态');
 		} catch (e) {
 			// Test command failure might mean tests failed — still parse output
 			const err = e as { stdout?: string; stderr?: string; message?: string };
 			const output = (err.stdout || '') + '\n' + (err.stderr || '');
 			if (output.trim()) {
-				await this.parseAndUpdateResults(output);
+				logger.warn(`测试命令以非零退出，尝试解析输出`);
+				const updatedCount = await this.parseAndUpdateResults(output, logger);
+				logger.warn(`共更新 ${updatedCount} 个用例状态（部分失败）`);
+				await logger.flush();
 				new Notice('部分测试失败，已更新用例状态');
 			} else {
+				logger.error(`测试执行失败：${err.message || '未知错误'}`);
+				await logger.flush();
 				new Notice(`测试执行失败: ${err.message || '未知错误'}`);
 			}
 		}
@@ -101,13 +113,16 @@ export class TestService {
 		return stdout + '\n' + stderr;
 	}
 
-	private async parseAndUpdateResults(output: string): Promise<void> {
+	private async parseAndUpdateResults(output: string, logger?: OperationLogger): Promise<number> {
 		// Find all test files and update their status based on output
 		const testsFolder = this.app.vault.getAbstractFileByPath(this.settings.testsFolder);
-		if (!(testsFolder instanceof TFolder)) return;
+		if (!(testsFolder instanceof TFolder)) return 0;
 
 		const allTestFiles = this.getAllTestFiles(testsFolder);
 		const dateStr = today();
+		let totalUpdated = 0;
+
+		logger?.info(`扫描测试文件数：${allTestFiles.length}`);
 
 		for (const file of allTestFiles) {
 			let content = await this.app.vault.read(file);
@@ -138,6 +153,8 @@ export class TestService {
 
 				if (newStatus !== currentStatus) {
 					modified = true;
+					totalUpdated++;
+					logger?.info(`${file.basename}：${testName.trim()} ${currentStatus} → ${newStatus}`);
 					return `${num} ${testName}${middle} — | ${newStatus} | ${dateStr} |`;
 				}
 				return fullMatch;
@@ -149,8 +166,11 @@ export class TestService {
 				await this.app.fileManager.processFrontMatter(file, (fm) => {
 					fm.updated = dateStr;
 				});
+				logger?.success(`已更新测试文件：${file.path}`);
 			}
 		}
+
+		return totalUpdated;
 	}
 
 	private findTestFilesForDetail(folder: TFolder, detailSlug: string): TFile[] {
