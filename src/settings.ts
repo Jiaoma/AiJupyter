@@ -239,5 +239,15 @@ export class AiJupyterSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				})
 			);
+
+		new Setting(containerEl)
+			.setName('启用 AI 友好度高亮')
+			.setDesc('对 AI 不友好的文本以醒目背景色标注（需先执行友好度检查）')
+			.addToggle((toggle) =>
+				toggle.setValue(this.plugin.settings.enableFriendlinessHighlight).onChange(async (value) => {
+					this.plugin.settings.enableFriendlinessHighlight = value;
+					await this.plugin.saveSettings();
+				})
+			);
 	}
 }

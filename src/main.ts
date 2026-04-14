@@ -6,10 +6,15 @@ import { LinkService } from './services/link-service';
 import { DiffService } from './services/diff-service';
 import { TestService } from './services/test-service';
 import { StatusService } from './services/status-service';
+import { ScaffoldService } from './services/scaffold-service';
+import { ExpansionService } from './services/expansion-service';
+import { FriendlinessService } from './services/friendliness-service';
 import { DashboardView, DASHBOARD_VIEW_TYPE } from './views/dashboard-view';
 import { SidePanelView, SIDE_PANEL_VIEW_TYPE } from './views/side-panel-view';
+import { ChatPanelView, CHAT_PANEL_VIEW_TYPE } from './views/chat-panel-view';
 import { BreadcrumbProcessor } from './views/breadcrumb-view';
 import { StatusColorProcessor } from './views/status-color-processor';
+import { FriendlinessProcessor } from './views/friendliness-processor';
 import { resolveLoginEnv, clearEnvCache } from './utils/shell-env';
 
 export default class AiJupyterPlugin extends Plugin {
@@ -20,8 +25,12 @@ export default class AiJupyterPlugin extends Plugin {
 	private diffService!: DiffService;
 	private testService!: TestService;
 	private statusService!: StatusService;
+	private scaffoldService!: ScaffoldService;
+	private expansionService!: ExpansionService;
+	private friendlinessService!: FriendlinessService;
 	private breadcrumbProcessor!: BreadcrumbProcessor;
 	private statusColorProcessor!: StatusColorProcessor;
+	private friendlinessProcessor!: FriendlinessProcessor;
 
 	// Debounce state for auto-link-on-save
 	private autoLinkTimer: ReturnType<typeof setTimeout> | null = null;
@@ -36,16 +45,22 @@ export default class AiJupyterPlugin extends Plugin {
 		this.testService = new TestService(this.app, this.settings);
 		this.statusService = new StatusService(this.app, this.settings, this.testService);
 		this.diffService = new DiffService(this.app, this.settings);
+		this.scaffoldService = new ScaffoldService(this.app, this.settings, this.claudeService);
+		this.expansionService = new ExpansionService(this.app, this.settings, this.claudeService);
+		this.friendlinessService = new FriendlinessService(this.app, this.settings, this.claudeService);
 		this.breadcrumbProcessor = new BreadcrumbProcessor(this.app, this.settings);
 		this.statusColorProcessor = new StatusColorProcessor(this.app, this.settings, this.statusService);
+		this.friendlinessProcessor = new FriendlinessProcessor(this.app, this.settings, this.friendlinessService);
 
 		// Register views
 		this.registerView(DASHBOARD_VIEW_TYPE, (leaf) => new DashboardView(leaf, this.statusService));
 		this.registerView(SIDE_PANEL_VIEW_TYPE, (leaf) => new SidePanelView(leaf, this.settings, this.statusService));
+		this.registerView(CHAT_PANEL_VIEW_TYPE, (leaf) => new ChatPanelView(leaf, this.settings, this.claudeService));
 
 		// Register markdown post-processors
 		this.registerMarkdownPostProcessor(this.breadcrumbProcessor.getProcessor());
 		this.registerMarkdownPostProcessor(this.statusColorProcessor.getProcessor());
+		this.registerMarkdownPostProcessor(this.friendlinessProcessor.getProcessor());
 
 		// Register commands
 		this.addCommand({
@@ -184,6 +199,110 @@ export default class AiJupyterPlugin extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: 'create-scaffold',
+			name: 'Create Scaffold - 创建需求文档脚手架（仅 overview.md）',
+			callback: async () => {
+				try {
+					await this.scaffoldService.createScaffold();
+				} catch (e) {
+					new Notice(`脚手架创建失败: ${(e as Error).message}`);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: 'generate-requirements',
+			name: 'Generate Requirements - AI 生成需求文档',
+			callback: async () => {
+				try {
+					await this.scaffoldService.generateRequirements();
+				} catch (e) {
+					new Notice(`需求文档生成失败: ${(e as Error).message}`);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: 'generate-req-impl-mapping',
+			name: 'Generate Req-Impl Mapping - AI 生成需求追踪矩阵',
+			callback: async () => {
+				try {
+					await this.scaffoldService.generateReqImplMapping();
+				} catch (e) {
+					new Notice(`追踪矩阵生成失败: ${(e as Error).message}`);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: 'generate-test-cases',
+			name: 'Generate Test Cases - AI 生成测试用例',
+			callback: async () => {
+				try {
+					await this.scaffoldService.generateTestCases();
+				} catch (e) {
+					new Notice(`测试用例生成失败: ${(e as Error).message}`);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: 'generate-changelog',
+			name: 'Generate Changelog - AI 生成变更日志',
+			callback: async () => {
+				try {
+					await this.scaffoldService.generateChangelog();
+				} catch (e) {
+					new Notice(`变更日志生成失败: ${(e as Error).message}`);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: 'expand-document',
+			name: 'Expand Document - AI 扩写当前文档',
+			editorCallback: async () => {
+				const file = this.app.workspace.getActiveFile();
+				if (!file) {
+					new Notice('请先打开一个文档');
+					return;
+				}
+				try {
+					await this.expansionService.expandDocument(file);
+				} catch (e) {
+					new Notice(`扩写失败: ${(e as Error).message}`);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: 'check-friendliness',
+			name: 'Check Friendliness - AI 友好度检查',
+			editorCallback: async () => {
+				const file = this.app.workspace.getActiveFile();
+				if (!file) {
+					new Notice('请先打开一个文档');
+					return;
+				}
+				try {
+					await this.friendlinessService.checkFriendliness(file);
+				} catch (e) {
+					new Notice(`友好度检查失败: ${(e as Error).message}`);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: 'toggle-friendliness-highlight',
+			name: 'Toggle Friendliness Highlight - 切换友好度高亮',
+			callback: () => {
+				this.settings.enableFriendlinessHighlight = !this.settings.enableFriendlinessHighlight;
+				this.saveSettings();
+				new Notice(`友好度高亮已${this.settings.enableFriendlinessHighlight ? '开启' : '关闭'}`);
+			},
+		});
+
 		// Settings tab
 		this.addSettingTab(new AiJupyterSettingTab(this.app, this));
 
@@ -262,13 +381,23 @@ export default class AiJupyterPlugin extends Plugin {
 		this.diffService.updateSettings(this.settings);
 		this.testService.updateSettings(this.settings);
 		this.statusService.updateSettings(this.settings);
+		this.scaffoldService.updateSettings(this.settings);
+		this.expansionService.updateSettings(this.settings);
+		this.friendlinessService.updateSettings(this.settings);
 		this.breadcrumbProcessor.updateSettings(this.settings);
 		this.statusColorProcessor.updateSettings(this.settings);
+		this.friendlinessProcessor.updateSettings(this.settings);
 
 		// Update side panel settings
 		const sidePanelLeaves = this.app.workspace.getLeavesOfType(SIDE_PANEL_VIEW_TYPE);
 		for (const leaf of sidePanelLeaves) {
 			(leaf.view as SidePanelView).updateSettings(this.settings);
+		}
+
+		// Update chat panel settings
+		const chatPanelLeaves = this.app.workspace.getLeavesOfType(CHAT_PANEL_VIEW_TYPE);
+		for (const leaf of chatPanelLeaves) {
+			(leaf.view as ChatPanelView).updateSettings(this.settings);
 		}
 	}
 

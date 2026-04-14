@@ -317,3 +317,199 @@
   color: var(--text-muted);
   margin-top: 4px;
 }
+
+/* AI Friendliness Highlight */
+
+.aijupyter-unfriendly {
+  border-radius: 2px;
+  padding: 1px 2px;
+  cursor: help;
+}
+
+.aijupyter-unfriendly-ambiguous {
+  background-color: #ffeeba;
+  border-bottom: 2px wavy #e0a800;
+}
+
+.aijupyter-unfriendly-vague {
+  background-color: #f5c6cb;
+  border-bottom: 2px wavy #dc3545;
+}
+
+.aijupyter-unfriendly-no-criteria {
+  background-color: #d6d8db;
+  border-bottom: 2px wavy #6c757d;
+}
+
+.aijupyter-unfriendly-imprecise {
+  background-color: #bee5eb;
+  border-bottom: 2px wavy #17a2b8;
+}
+
+/* ── Chat Panel ── */
+
+.aijupyter-chat-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.aijupyter-chat-header {
+  padding: 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.aijupyter-chat-title {
+  font-weight: 600;
+  font-size: 1em;
+}
+
+.aijupyter-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aijupyter-chat-msg {
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 90%;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.aijupyter-chat-msg.assistant {
+  background: var(--background-secondary);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.aijupyter-chat-msg.user {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.aijupyter-chat-msg.error {
+  background: var(--background-modifier-error);
+  color: var(--text-on-accent);
+  align-self: center;
+  font-size: 0.9em;
+  border-radius: 8px;
+}
+
+.aijupyter-chat-msg.system {
+  background: var(--background-secondary-alt);
+  color: var(--text-muted);
+  align-self: center;
+  font-size: 0.85em;
+  border-radius: 8px;
+}
+
+.aijupyter-chat-note {
+  text-align: center;
+  font-size: 0.8em;
+  color: var(--text-muted);
+  padding: 4px 0;
+}
+
+.aijupyter-chat-msg.assistant .markdown-rendered {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.aijupyter-chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--background-modifier-border);
+  align-items: flex-end;
+}
+
+.aijupyter-chat-input-area textarea {
+  flex: 1;
+  resize: none;
+  min-height: 40px;
+  max-height: 120px;
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.aijupyter-chat-input-area textarea:disabled {
+  opacity: 0.5;
+}
+
+.aijupyter-chat-input-area button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  font-weight: 500;
+}
+
+.aijupyter-chat-input-area button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.aijupyter-chat-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--background-modifier-border);
+  justify-content: flex-end;
+}
+
+.aijupyter-chat-actions button {
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+.aijupyter-chat-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.aijupyter-chat-confirm-btn {
+  background: var(--interactive-accent) !important;
+  color: var(--text-on-accent) !important;
+  border-color: var(--interactive-accent) !important;
+}
+
+.aijupyter-chat-cancel-btn {
+  background: var(--background-secondary) !important;
+}
+
+/* Streaming cursor blink */
+.aijupyter-chat-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--text-accent);
+  animation: aijupyter-blink 0.8s step-end infinite;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+}
+
+@keyframes aijupyter-blink {
+  50% { opacity: 0; }
+}

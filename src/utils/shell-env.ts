@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, spawn, ChildProcess } from 'child_process';
 import type { ShellType } from '../settings-data';
 
 let cachedEnv: NodeJS.ProcessEnv | null = null;
@@ -103,6 +103,106 @@ export async function shellExec(
 			}
 		});
 	});
+}
+
+export interface SpawnStreamCallbacks {
+	/** Called with each text delta as Claude streams output */
+	onDelta: (text: string) => void;
+	/** Called when the process completes successfully */
+	onComplete: (fullResult: string, sessionId: string) => void;
+	/** Called when the process errors */
+	onError: (error: Error) => void;
+}
+
+/**
+ * Spawn a long-running process with streaming stdout parsing.
+ *
+ * Designed for Claude CLI with `--output-format stream-json --verbose
+ * --include-partial-messages`. Parses each stdout line as JSON and extracts
+ * text deltas (content_block_delta) and the final result/session_id.
+ *
+ * Returns the ChildProcess handle so callers can kill it.
+ */
+export async function shellSpawn(
+	command: string,
+	args: string[],
+	shell: ShellType,
+	extraPath: string,
+	callbacks: SpawnStreamCallbacks,
+	opts: ExecOptions = {}
+): Promise<ChildProcess> {
+	const loginEnv = await resolveLoginEnv(shell);
+	const env = buildExecEnv(loginEnv, extraPath);
+
+	const child = spawn(command, args, {
+		shell,
+		env,
+		cwd: opts.cwd,
+		stdio: ['pipe', 'pipe', 'pipe'],
+	});
+
+	let fullResult = '';
+	let sessionId = '';
+	let buffer = '';
+
+	child.stdout?.on('data', (chunk: Buffer) => {
+		buffer += chunk.toString();
+		const lines = buffer.split('\n');
+		// Keep the last incomplete line in the buffer
+		buffer = lines.pop() || '';
+
+		for (const line of lines) {
+			const trimmed = line.trim();
+			if (!trimmed) continue;
+
+			try {
+				const parsed = JSON.parse(trimmed);
+
+				if (parsed.type === 'stream_event') {
+					const event = parsed.event;
+					if (event?.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+						const text = event.delta.text;
+						if (text) {
+							fullResult += text;
+							callbacks.onDelta(text);
+						}
+					}
+				} else if (parsed.type === 'result' && parsed.subtype === 'success') {
+					fullResult = parsed.result || fullResult;
+					sessionId = parsed.session_id || '';
+				}
+			} catch {
+				// Not JSON — ignore (could be progress or debug output)
+			}
+		}
+	});
+
+	child.on('close', (code) => {
+		// Process any remaining buffer
+		if (buffer.trim()) {
+			try {
+				const parsed = JSON.parse(buffer.trim());
+				if (parsed.type === 'result' && parsed.subtype === 'success') {
+					fullResult = parsed.result || fullResult;
+					sessionId = parsed.session_id || '';
+				}
+			} catch {
+				// ignore
+			}
+		}
+
+		if (code === 0 || fullResult) {
+			callbacks.onComplete(fullResult, sessionId);
+		} else {
+			callbacks.onError(new Error(`Process exited with code ${code}`));
+		}
+	});
+
+	child.on('error', (err) => {
+		callbacks.onError(err);
+	});
+
+	return child;
 }
 
 /**

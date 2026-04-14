@@ -18,6 +18,7 @@ export interface AiJupyterSettings {
 	enableStatusColors: boolean;
 	showBreadcrumbs: boolean;
 	showSidePanel: boolean;
+	enableFriendlinessHighlight: boolean;
 }
 
 export const DEFAULT_SETTINGS: AiJupyterSettings = {
@@ -38,4 +39,5 @@ export const DEFAULT_SETTINGS: AiJupyterSettings = {
 	enableStatusColors: true,
 	showBreadcrumbs: true,
 	showSidePanel: true,
+	enableFriendlinessHighlight: true,
 };
